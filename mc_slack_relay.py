@@ -13,16 +13,16 @@ slack_app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 # exclude_pattern = '.* \[Slack] '
 # relay_pattern = '(.*)'
 
-# Actual Minecraft server (vanilla or Forge):
+# Minecraft server (vanilla or Forge):
 # these two are conveniences to reference in the other regexes
-prefix = '\[\d\d:\d\d:\d\d] \[Server thread/INFO](?: \[minecraft/MinecraftServer]): '
-server_prefix = '\[Not Secure] \[Server] '
+prefix = r"\[\d\d:\d\d:\d\d] \[Server thread/INFO](?: \[minecraft/MinecraftServer])?: "
+server_prefix = r"\[Not Secure] \[Server] "
 # what messages should be included in the relay to slack?
-include_pattern = f"{prefix}(?:Starting minecraft server|Done \(|Stopping the server|{server_prefix}|.* joined the game$|.* left the game$|.* has reached the goal \[|.* has made the advancement \[||<)"
+include_pattern = rf"{prefix}(?:Starting minecraft server|Done \(|Stopping the server|{server_prefix}|.* joined the game$|.* left the game$|.* has reached the goal \[|.* has made the advancement \[|<)"
 # what messages should be excluded?
-exclude_pattern = f"{prefix}{server_prefix}\[Slack] "
+exclude_pattern = rf"{prefix}{server_prefix}\[Slack] "
 # what part of a matching message should be relayed?
-relay_pattern = f"{prefix}(?:\[Not Secure] )?(.*)"
+relay_pattern = rf"{prefix}(?:\[Not Secure] )?(.*)"
 
 slack_channel = os.environ["SLACK_CHANNEL_ID"]
 
