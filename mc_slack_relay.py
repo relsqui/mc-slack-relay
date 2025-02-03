@@ -8,13 +8,22 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
 slack_app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 
-# include_pattern = '\[\d\d:\d\d:\d\d] \[Server thread/INFO] \[minecraft/MinecraftServer\]: '
-# exclude_pattern = f"{include_pattern}\[Slack] "
-# relay_pattern = f"{include_pattern}(.*)"
+# Testing with chatter.sh:
+# include_pattern = '.'
+# exclude_pattern = '.* \[Slack] '
+# relay_pattern = '(.*)'
 
-include_pattern = '.'
-exclude_pattern = '.* \[Slack] '
-relay_pattern = '(.*)'
+# Actual Minecraft server (vanilla or Forge):
+# these two are conveniences to reference in the other regexes
+prefix = '\[\d\d:\d\d:\d\d] \[Server thread/INFO](?: \[minecraft/MinecraftServer]): '
+server_prefix = '\[Not Secure] \[Server] '
+# what messages should be included in the relay to slack?
+include_pattern = f"{prefix}(?:Starting minecraft server|Done \(|Stopping the server|{server_prefix}|.* joined the game$|.* left the game$|.* has reached the goal \[|.* has made the advancement \[||<)"
+# what messages should be excluded?
+exclude_pattern = f"{prefix}{server_prefix}\[Slack] "
+# what part of a matching message should be relayed?
+relay_pattern = f"{prefix}(?:\[Not Secure] )?(.*)"
+
 slack_channel = os.environ["SLACK_CHANNEL_ID"]
 
 input_queue = asyncio.Queue()
@@ -78,8 +87,7 @@ async def user_listener():
 async def main():
   """Start the server and manage all the attendant listeners."""
   subproc = await asyncio.create_subprocess_exec(
-    'bash',
-    './chatter.sh',
+    *sys.argv[1:],
     stdin=asyncio.subprocess.PIPE,
     stdout=asyncio.subprocess.PIPE
     # TODO: don't drop stderr! (although it does get logged anyway)
@@ -100,6 +108,9 @@ async def main():
 
 if __name__ == "__main__":
   try:
+    if len(sys.argv) < 2:
+      print("Run this with arguments of the script you want it to wrap, like: mc_slack_relay.py java -jar server.jar")
+      sys.exit(1)
     asyncio.run(main())
   except KeyboardInterrupt:
     sys.exit(0)
