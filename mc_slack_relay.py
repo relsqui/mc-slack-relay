@@ -5,6 +5,7 @@ import sys
 from aioconsole import ainput
 from slack_bolt.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
+from slack_sdk.errors import SlackApiError
 
 slack_app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 
@@ -39,10 +40,13 @@ async def slack_connection():
 
 async def slack_post(message):
   """Post a message into the Slack channel."""
-  await slack_app.client.chat_postMessage(
-    channel=slack_channel,
-    text=message
-  )
+  try:
+    await slack_app.client.chat_postMessage(
+      channel=slack_channel,
+      text=message
+    )
+  except SlackApiError as e:
+    print("Failed to send Slack message: ", str(e))
 
 @slack_app.message()
 async def slack_listener(message):
