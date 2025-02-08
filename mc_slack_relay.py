@@ -61,7 +61,10 @@ async def server_listener(subproc):
     if len(line_bytes) == 0:
       break
     line = line_bytes.decode().strip()
-    print(line)
+    try:
+      print(line)
+    except BlockingIOError:
+      print(f"(Line too long to print! It started like this: {line[:100]})")
 
     # should we send this one to Slack too?
     if not re.match(include_pattern, line):
